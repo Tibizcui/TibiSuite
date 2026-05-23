@@ -25,7 +25,7 @@ Each tracker can also be installed and used **independently** — TibiSuite is f
 | **DailyTracker** | Daily & weekly quest tracker — Midnight & The War Within. Auto-detection via `C_QuestLog`. | 1.0 |
 | **DgnTracker** | Dungeon, Raid, Delve & Torghast entrance tracker. All expansions from Vanilla to Midnight. | 1.3 |
 | **LegTracker** | Legendary item tracker by expansion. Full account-wide tracking across all your characters. | 2.0 |
-| **RepTracker** | Reputation tracker for all expansions — Vanilla to Midnight. 13 expansions, collapsible groups, auto-track by zone. | 2.0 |
+| **RenTracker** | Reputation tracker for all expansions — Vanilla to Midnight. 13 expansions, collapsible groups, auto-track by zone. | 2.0 |
 
 ### Installation
 
@@ -39,7 +39,7 @@ Interface/AddOns/
 ├── DailyTracker/
 ├── DgnTracker/
 ├── LegTracker/
-└── RepTracker/
+└── RenTracker/
 ```
 
 TibiSuite will automatically detect which trackers are installed and show a CurseForge download link for any missing ones.
@@ -50,7 +50,7 @@ Install only the tracker(s) you want. Each addon works completely standalone wit
 
 ```
 Interface/AddOns/
-└── RepTracker/   ← works perfectly on its own
+└── RenTracker/   ← works perfectly on its own
 ```
 
 ### Usage
@@ -96,7 +96,7 @@ Chaque tracker peut également être installé et utilisé **de manière indépe
 | **DailyTracker** | Suivi des quêtes quotidiennes et hebdomadaires — Midnight & The War Within. Détection automatique via `C_QuestLog`. | 1.0 |
 | **DgnTracker** | Tracker des entrées d'instances (Donjons, Raids, Gouffres, Torghast) pour toutes les extensions. Vanilla → Midnight. | 1.3 |
 | **LegTracker** | Suivi des objets légendaires par extension. Suivi de compte complet sur tous vos personnages. | 2.0 |
-| **RepTracker** | Suivi des réputations multi-extensions — Vanilla → Midnight. 13 extensions, groupes repliables, suivi auto par zone. | 2.0 |
+| **RenTracker** | Suivi des réputations multi-extensions — Vanilla → Midnight. 13 extensions, groupes repliables, suivi auto par zone. | 2.0 |
 
 ### Installation
 
@@ -110,7 +110,7 @@ Interface/AddOns/
 ├── DailyTracker/
 ├── DgnTracker/
 ├── LegTracker/
-└── RepTracker/
+└── RenTracker/
 ```
 
 TibiSuite détecte automatiquement les trackers installés et affiche un lien CurseForge pour les modules manquants.
@@ -179,9 +179,9 @@ LegTracker/
 │   └── frFR.lua
 └── medias/
 
-RepTracker/
-├── RepTracker.toc
-├── RepTracker.lua
+RenTracker/
+├── RenTracker.toc
+├── RenTracker.lua
 ├── data/           — 13 expansions (Vanilla → Midnight)
 └── medias/
 ```

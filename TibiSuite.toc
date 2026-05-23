@@ -1,8 +1,8 @@
 ## Interface: 120007, 120005
 ## Title: TibiSuite - |cFF9480FFMidnight|r
 ## Title-frFR: TibiSuite - |cFF9480FFMidnight|r
-## Notes: Tracker Suite by Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker et RepTracker. Un seul bouton minimap.
-## Notes-frFR: Suite de trackers Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker et RepTracker. Un seul bouton minimap.
+## Notes: Tracker Suite by Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker et RenTracker. Un seul bouton minimap.
+## Notes-frFR: Suite de trackers Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker et RenTracker. Un seul bouton minimap.
 ## Author: Tibiscui - Kirin Tor
 ## Version: 1.0.0
 
@@ -16,7 +16,7 @@
 ## Category: Tracking
 ## Category-frFR: Tracking
 
-## OptionalDeps: DailyTracker, DgnTracker, LegTracker, RepTracker
+## OptionalDeps: DailyTracker, DgnTracker, LegTracker, RenTracker
 
 ## X-Website: https://www.curseforge.com/wow/addons/tibisuite
 ## X-Discord: https://discord.gg/tibiscui

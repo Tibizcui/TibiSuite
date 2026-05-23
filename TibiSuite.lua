@@ -3,7 +3,7 @@
 -- Auteur  : Tibiscui - Kirin Tor
 -- Rôle    : Wrapper léger — barre d'onglets unifiée pour les
 --           4 trackers (DailyTracker, DgnTracker, LegTracker,
---           RepTracker). Fonctionne avec 1, 2, 3 ou 4 modules
+--           RenTracker). Fonctionne avec 1, 2, 3 ou 4 modules
 --           installés. Affiche un message CurseForge si un module
 --           est absent.
 -- ================================================================
@@ -89,13 +89,13 @@ local MODULES = {
   },
   {
     key         = "Rep",
-    addonName   = "RepTracker",
+    addonName   = "RenTracker",
     label       = "Reput.",
     frameGlobal = "RTMainFrame",
     mmBtnGlobal = "RTMinimapBtn",
-    toggleFn    = "RepTracker_Toggle",
+    toggleFn    = "RenTracker_Toggle",
     col         = { r=0.45, g=0.70, b=1.00 },  -- bleu-cyan réputations
-    curseUrl    = "https://www.curseforge.com/wow/addons/tibireptracker",
+    curseUrl    = "https://www.curseforge.com/wow/addons/tibirentracker",
   },
 }
 
@@ -356,7 +356,9 @@ local function BuildBar()
   -- Hover : surbrillance rouge de l'icône + tooltip avec les deux actions
   logoBtn:SetScript("OnEnter", function()
     logoIcon:SetVertexColor(1.1, 0.75, 0.75)   -- highlight rouge doux
-    GameTooltip:SetOwner(logoBtn, "ANCHOR_TOP")
+    -- ANCHOR_NONE + SetPoint = contrôle précis, évite la superposition des onglets
+    GameTooltip:SetOwner(logoBtn, "ANCHOR_NONE")
+    GameTooltip:SetPoint("TOPLEFT", logoBtn, "BOTTOMLEFT", 0, -6)
     GameTooltip:AddLine("|cFFC41F3BTibiSuite|r v1.0.0")
     GameTooltip:AddLine("|cFFFFD700Clic|r : masquer la barre",        0.80, 0.80, 0.85)
     GameTooltip:AddLine("|cFFFFD700Maintien + glisser|r : déplacer",  0.70, 0.70, 0.75)
@@ -432,7 +434,8 @@ local function BuildBar()
     btn:SetScript("OnEnter", function(s)
       -- Bordure plus vive au survol
       s:SetBackdropBorderColor(capturedMod.col.r, capturedMod.col.g, capturedMod.col.b, 0.95)
-      GameTooltip:SetOwner(s, "ANCHOR_TOP")
+      GameTooltip:SetOwner(s, "ANCHOR_NONE")
+      GameTooltip:SetPoint("TOPLEFT", s, "BOTTOMLEFT", 0, -6)
       if C_AddOns.IsAddOnLoaded(capturedMod.addonName) then
         GameTooltip:AddLine(
           "|cFFFFD700" .. capturedMod.addonName .. "|r")
@@ -577,7 +580,7 @@ local function HideIndividualMinimapButtons()
     "DTMinimapBtn",          -- DailyTracker
     "DGNMinimapBtn",         -- DgnTracker
     "LegTrackerMinimapBtn",  -- LegTracker
-    "RTMinimapBtn",          -- RepTracker
+    "RTMinimapBtn",          -- RenTracker
   }
   for _, name in ipairs(btns) do
     local btn = _G[name]
