@@ -64,7 +64,7 @@ local MODULES = {
     frameGlobal = "DTMainFrame",
     mmBtnGlobal = "DTMinimapBtn",
     toggleFn    = "DailyTracker_Toggle",
-    col         = { r=0.58, g=0.30, b=0.95 },  -- violet Midnight
+    col         = { r=0.25, g=0.78, b=0.92 },  -- violet Midnight
     curseUrl    = "https://www.curseforge.com/wow/addons/dailytracker",
   },
   {
@@ -74,28 +74,28 @@ local MODULES = {
     frameGlobal = "DGNMainFrame",
     mmBtnGlobal = "DGNMinimapBtn",
     toggleFn    = "DgnTracker_Toggle",
-    col         = { r=0.30, g=0.70, b=1.00 },  -- bleu instances
+    col         = { r=0.00, g=0.44, b=0.87 },  -- bleu instances
     curseUrl    = "https://www.curseforge.com/wow/addons/dgntracker",
   },
   {
     key         = "Leg",
     addonName   = "LegTracker",
-    label       = "Legend.",
+    label       = "LegTracker",
     frameGlobal = "LegTrackerMainFrame",
     mmBtnGlobal = "LegTrackerMinimapBtn",
     toggleFn    = "LegTracker_Toggle",
-    col         = { r=0.95, g=0.78, b=0.35 },  -- or légendaires
+    col         = { r=1.00, g=0.50, b=0.00 },  -- or légendaires
     curseUrl    = "https://www.curseforge.com/wow/addons/legtracker",
   },
   {
     key         = "Rep",
     addonName   = "RenTracker",
-    label       = "Reput.",
+    label       = "Renown.",
     frameGlobal = "RTMainFrame",
     mmBtnGlobal = "RTMinimapBtn",
     toggleFn    = "RenTracker_Toggle",
-    col         = { r=0.45, g=0.70, b=1.00 },  -- bleu-cyan réputations
-    curseUrl    = "https://www.curseforge.com/wow/addons/tibirentracker",
+    col         = { r=0.8, g=0.6, b=0.20 },  -- bleu-cyan réputations
+    curseUrl    = "https://www.curseforge.com/wow/addons/rentracker",
   },
 }
 
