@@ -90,9 +90,9 @@ local MODULES = {
   {
     key         = "Rep",
     addonName   = "RenTracker",
-    label       = "Renown.",
-    frameGlobal = "RTMainFrame",
-    mmBtnGlobal = "RTMinimapBtn",
+    label       = "Reput.",
+    frameGlobal = "RNTMainFrame",
+    mmBtnGlobal = "RNTMinimapBtn",
     toggleFn    = "RenTracker_Toggle",
     col         = { r=0.8, g=0.6, b=0.20 },  -- bleu-cyan réputations
     curseUrl    = "https://www.curseforge.com/wow/addons/rentracker",
@@ -393,7 +393,8 @@ local function BuildBar()
 
   closeBtn:SetScript("OnEnter", function(s)
     s:SetBackdropBorderColor(1.0, 0.30, 0.30, 1.0)
-    GameTooltip:SetOwner(s, "ANCHOR_TOP")
+    GameTooltip:SetOwner(s, "ANCHOR_NONE")
+    GameTooltip:SetPoint("TOPLEFT", s, "BOTTOMLEFT", 0, -6)
     GameTooltip:AddLine("Masquer la barre TibiSuite", 0.8, 0.8, 0.8)
     GameTooltip:AddLine("(icône minimap pour rouvrir)", 0.5, 0.5, 0.5)
     GameTooltip:Show()
@@ -580,7 +581,7 @@ local function HideIndividualMinimapButtons()
     "DTMinimapBtn",          -- DailyTracker
     "DGNMinimapBtn",         -- DgnTracker
     "LegTrackerMinimapBtn",  -- LegTracker
-    "RTMinimapBtn",          -- RenTracker
+    "RNTMinimapBtn",         -- RenTracker
   }
   for _, name in ipairs(btns) do
     local btn = _G[name]
