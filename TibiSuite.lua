@@ -564,7 +564,7 @@ local function BuildMinimapButton()
     for _, mod in ipairs(MODULES) do
       local ok = C_AddOns.IsAddOnLoaded(mod.addonName)
       local status = ok and "|cFF44FF44●|r " or "|cFFFF5555●|r "
-      GameTooltip:AddLine(status .. mod.addonName, 0.80, 0.80, 0.80)
+      GameTooltip:AddLine(status .. ColorCode(mod.col.r, mod.col.g, mod.col.b) .. mod.addonName .. "|r")
     end
     GameTooltip:Show()
   end)
