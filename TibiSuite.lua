@@ -64,7 +64,7 @@ local MODULES = {
     frameGlobal = "DTMainFrame",
     mmBtnGlobal = "DTMinimapBtn",
     toggleFn    = "DailyTracker_Toggle",
-    col         = { r=0.58, g=0.30, b=0.95 },  -- violet Midnight
+    col         = { r=0.41, g=0.80, b=0.94 },  -- bleu Mage (#69CCF0)
     curseUrl    = "https://www.curseforge.com/wow/addons/dailytracker",
   },
   {
@@ -74,7 +74,7 @@ local MODULES = {
     frameGlobal = "DGNMainFrame",
     mmBtnGlobal = "DGNMinimapBtn",
     toggleFn    = "DgnTracker_Toggle",
-    col         = { r=0.30, g=0.70, b=1.00 },  -- bleu instances
+    col         = { r=0.00, g=0.44, b=0.87 },  -- bleu Shaman (#0070DE)
     curseUrl    = "https://www.curseforge.com/wow/addons/dgntracker",
   },
   {
@@ -84,7 +84,7 @@ local MODULES = {
     frameGlobal = "LegTrackerMainFrame",
     mmBtnGlobal = "LegTrackerMinimapBtn",
     toggleFn    = "LegTracker_Toggle",
-    col         = { r=0.95, g=0.78, b=0.35 },  -- or légendaires
+    col         = { r=1.00, g=0.50, b=0.00 },  -- orange légendaire (#FF8000)
     curseUrl    = "https://www.curseforge.com/wow/addons/legtracker",
   },
   {
@@ -94,7 +94,7 @@ local MODULES = {
     frameGlobal = "RTMainFrame",
     mmBtnGlobal = "RTMinimapBtn",
     toggleFn    = "RenTracker_Toggle",
-    col         = { r=0.45, g=0.70, b=1.00 },  -- bleu-cyan réputations
+    col         = { r=1.00, g=0.82, b=0.00 },  -- or Quête (#FFD100)
     curseUrl    = "https://www.curseforge.com/wow/addons/tibirentracker",
   },
 }
@@ -438,7 +438,7 @@ local function BuildBar()
       GameTooltip:SetPoint("TOPLEFT", s, "BOTTOMLEFT", 0, -6)
       if C_AddOns.IsAddOnLoaded(capturedMod.addonName) then
         GameTooltip:AddLine(
-          "|cFFFFD700" .. capturedMod.addonName .. "|r")
+          ColorCode(capturedMod.col.r, capturedMod.col.g, capturedMod.col.b) .. capturedMod.addonName .. "|r")
         GameTooltip:AddLine("Clic gauche : ouvrir / fermer", 0.80, 0.80, 0.90)
       else
         GameTooltip:AddLine(
