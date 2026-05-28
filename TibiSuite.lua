@@ -516,6 +516,8 @@ local function BuildMinimapButton()
 
   -- ── Drag orbital ─────────────────────────────────────────────
   minimapBtn:RegisterForDrag("LeftButton")
+  -- Nécessaire pour que OnClick reste actif même avec RegisterForDrag
+  minimapBtn:RegisterForClicks("AnyUp")
 
   minimapBtn:SetScript("OnDragStart", function(s)
     s:SetScript("OnUpdate", function()
@@ -654,7 +656,10 @@ evFrame:SetScript("OnEvent", function(_, event, arg1)
     -- Si TibiSuiteDB existait déjà vide ou incomplet, on comble les manques
     TibiSuiteDB.mmAngle = TibiSuiteDB.mmAngle or 200
     TibiSuiteDB.barPos  = TibiSuiteDB.barPos  or { point = "CENTER", x = 0, y = -300 }
-    if TibiSuiteDB.barOpen == nil then TibiSuiteDB.barOpen = true end
+    -- Toujours afficher la barre au login, quel que soit le personnage ou son niveau.
+    -- (TibiSuiteDB étant partagé entre tous les persos du compte, un barOpen=false
+    --  sauvegardé sur le main empêchait le lancement sur les alts.)
+    TibiSuiteDB.barOpen = true
 
     BuildMinimapButton()
     BuildBar()
