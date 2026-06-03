@@ -97,6 +97,16 @@ local MODULES = {
     col         = { r=0.8, g=0.6, b=0.20 },  -- bleu-cyan réputations
     curseUrl    = "https://www.curseforge.com/wow/addons/rentracker",
   },
+  {
+    key         = "Lvl",
+    addonName   = "LvlHistory",
+    label       = "Lvl Hist",
+    frameGlobal = "LvlHistoryMainFrame",
+    mmBtnGlobal = "LvlHistoryMinimapButton",
+    toggleFn    = "LvlHistory_Toggle",
+    col         = { r=0.235, g=0.882, b=0.247 },  -- vert level-up #3CE13F
+    curseUrl    = "https://www.curseforge.com/wow/addons/lvlhistory",
+  },
 }
 
 -- ================================================================
@@ -584,6 +594,7 @@ local function HideIndividualMinimapButtons()
     "DGNMinimapBtn",         -- DgnTracker
     "LegTrackerMinimapBtn",  -- LegTracker
     "RNTMinimapBtn",         -- RenTracker
+    "LvlHistoryMinimapButton", -- LvlHistory
   }
   for _, name in ipairs(btns) do
     local btn = _G[name]
