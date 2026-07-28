@@ -107,6 +107,16 @@ local MODULES = {
     col         = { r=0.235, g=0.882, b=0.247 },  -- vert level-up #3CE13F
     curseUrl    = "https://www.curseforge.com/wow/addons/lvlhistory",
   },
+  {
+    key         = "Boss",
+    addonName   = "BossCounter",
+    label       = "BossCounter",
+    frameGlobal = "BCMainFrame",
+    mmBtnGlobal = "BCMinimapBtn",
+    toggleFn    = "BossCounter_Toggle",
+    col         = { r=0.639, g=0.188, b=0.788 },  -- violet #A330C9
+    curseUrl    = "https://www.curseforge.com/wow/addons/bosscounter",
+  },
 }
 
 -- ================================================================
@@ -595,6 +605,7 @@ local function HideIndividualMinimapButtons()
     "LegTrackerMinimapBtn",  -- LegTracker
     "RNTMinimapBtn",         -- RenTracker
     "LvlHistoryMinimapButton", -- LvlHistory
+    "BCMinimapBtn",          -- BossCounter
   }
   for _, name in ipairs(btns) do
     local btn = _G[name]
