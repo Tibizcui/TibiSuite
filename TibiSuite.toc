@@ -1,13 +1,14 @@
-## Interface: 120007, 120005
+## Interface: 120100, 120007, 120005
 ## Title: TibiSuite - |cFF9480FFMidnight|r
 ## Title-frFR: TibiSuite - |cFF9480FFMidnight|r
-## Notes: Tracker Suite by Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker et RenTracker. Un seul bouton minimap.
-## Notes-frFR: Suite de trackers Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker et RenTracker. Un seul bouton minimap.
+## Notes: Tracker Suite by Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker, RenTracker, LvlHistory et WeeklyCompass. Un seul bouton minimap.
+## Notes-frFR: Suite de trackers Tibiscui. Barre d'onglets unifiée pour DailyTracker, DgnTracker, LegTracker, RenTracker, LvlHistory et WeeklyCompass. Un seul bouton minimap.
 ## Author: Tibiscui - Kirin Tor
-## Version: 1.0.0
+## Version: 3.0
 
 ## IconTexture: Interface\AddOns\TibiSuite\medias\TibiSuite
 ## SavedVariables: TibiSuiteDB
+## SavedVariablesPerCharacter: TibiSuiteCharDB
 
 ## AddonCompartmentFunc: TibiSuite_OnAddonCompartmentClick
 ## AddonCompartmentFuncOnEnter: TibiSuite_OnAddonCompartmentEnter
@@ -16,7 +17,7 @@
 ## Category: Tracking
 ## Category-frFR: Tracking
 
-## OptionalDeps: DailyTracker, DgnTracker, LegTracker, RenTracker, LvlHistory, BossCounter
+## OptionalDeps: DailyTracker, DgnTracker, LegTracker, RenTracker, LvlHistory, WeeklyCompass
 
 ## X-Website: https://www.curseforge.com/wow/addons/tibisuite
 ## X-Discord: https://discord.gg/tibiscui
