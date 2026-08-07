@@ -10,7 +10,14 @@
 -- ================================================================
 
 local ADDON   = "TibiSuite"
-local VERSION = "3.0"
+local VERSION = "3.1"
+
+-- Table globale minimale exposée pour les modules récents (ex. MiniHub).
+-- Elle leur permet de détecter TibiSuite comme parent, de s'y enregistrer,
+-- et de masquer leur bouton flottant quand ils tournent comme module.
+-- N'affecte pas le reste du wrapper (qui reste piloté par la table MODULES).
+TibiSuite = _G.TibiSuite or {}
+TibiSuite.modules = TibiSuite.modules or {}
 
 -- SavedVariables (compte) : réglages partagés par tous les personnages
 --   mmAngle  : angle du bouton minimap
@@ -37,8 +44,9 @@ local DEFAULTS = {
 -- ================================================================
 
 -- Couleurs standards (identiques aux 4 trackers)
-local COL_BG     = { r=0.04, g=0.02, b=0.06, a=0.97 }
-local COL_BORDER = { r=0.72, g=0.60, b=0.28, a=1.00 }
+-- Palette plate (façon WeeklyCompass) : fond gris-charbon, bordure fine noire
+local COL_BG     = { r=0.06, g=0.07, b=0.09, a=0.98 }
+local COL_BORDER = { r=0.00, g=0.00, b=0.00, a=1.00 }
 
 -- Convertit r,g,b [0-1] en code couleur WoW "|cFFRRGGBB"
 local function ColorCode(r, g, b)
@@ -55,12 +63,11 @@ local ICON_MISS = "|TInterface\\RaidFrame\\ReadyCheck-NotReady:14:14|t"
 
 -- Backdrop standard réutilisé partout
 local function MakeBackdrop(insets)
-  insets = insets or 4
+  -- Style plat : fond uni + bordure fine de 1 pixel (façon WeeklyCompass)
   return {
     bgFile   = "Interface\\Buttons\\WHITE8X8",
-    edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",
-    tile     = false, tileSize = 16, edgeSize = 14,
-    insets   = { left=insets, right=insets, top=insets, bottom=insets },
+    edgeFile = "Interface\\Buttons\\WHITE8X8",
+    edgeSize = 1,
   }
 end
 
@@ -84,7 +91,8 @@ local MODULES = {
     frameGlobal = "DTMainFrame",
     mmBtnGlobal = "DTMinimapBtn",
     toggleFn    = "DailyTracker_Toggle",
-    col         = { r=0.25, g=0.78, b=0.92 },  -- cyan Midnight
+    optionsFn   = "DailyTracker_OpenOptions",
+    col         = { r=0.086, g=0.769, b=0.988 },  -- cyan (logo #16C4FC)
     curseUrl    = "https://www.curseforge.com/wow/addons/dailytracker",
   },
   {
@@ -94,7 +102,8 @@ local MODULES = {
     frameGlobal = "DGNMainFrame",
     mmBtnGlobal = "DGNMinimapBtn",
     toggleFn    = "DgnTracker_Toggle",
-    col         = { r=0.00, g=0.44, b=0.87 },  -- bleu instances
+    optionsFn   = "DgnTracker_OpenOptions",
+    col         = { r=0.008, g=0.404, b=0.988 },  -- bleu (logo #0267FC)
     curseUrl    = "https://www.curseforge.com/wow/addons/dgntracker",
   },
   {
@@ -104,7 +113,8 @@ local MODULES = {
     frameGlobal = "LegTrackerMainFrame",
     mmBtnGlobal = "LegTrackerMinimapBtn",
     toggleFn    = "LegTracker_Toggle",
-    col         = { r=1.00, g=0.50, b=0.00 },  -- or légendaires
+    optionsFn   = "LegTracker_OpenOptions",
+    col         = { r=1.000, g=0.427, b=0.043 },  -- orange (logo #FF6D0B)
     curseUrl    = "https://www.curseforge.com/wow/addons/legtracker",
   },
   {
@@ -114,7 +124,8 @@ local MODULES = {
     frameGlobal = "RNTMainFrame",
     mmBtnGlobal = "RNTMinimapBtn",
     toggleFn    = "RenTracker_Toggle",
-    col         = { r=0.8, g=0.6, b=0.20 },  -- or réputations
+    optionsFn   = "RenTracker_OpenOptions",
+    col         = { r=0.867, g=0.651, b=0.412 },  -- or/sable (logo #DDA669)
     curseUrl    = "https://www.curseforge.com/wow/addons/rentracker",
   },
   {
@@ -124,7 +135,8 @@ local MODULES = {
     frameGlobal = "LvlHistoryMainFrame",
     mmBtnGlobal = "LvlHistoryMinimapButton",
     toggleFn    = "LvlHistory_Toggle",
-    col         = { r=0.235, g=0.882, b=0.247 },  -- vert level-up #3CE13F
+    optionsFn   = "LvlHistory_OpenOptions",
+    col         = { r=0.369, g=0.886, b=0.137 },  -- vert (logo #5EE223)
     curseUrl    = "https://www.curseforge.com/wow/addons/lvlhistory",
   },
   {
@@ -134,9 +146,34 @@ local MODULES = {
     frameGlobal = "WeeklyCompassFrame",
     mmBtnGlobal = "WeeklyCompassMinimapButton",
     toggleFn    = "WeeklyCompass_Toggle",
+    optionsFn   = "WeeklyCompass_OpenOptions",
     slashList   = "WEEKLYCOMPASS",  -- secours : /wc si la fonction Toggle est absente
-    col         = { r=0.20, g=0.80, b=0.70 },  -- turquoise boussole
+    col         = { r=0.039, g=1.000, b=0.745 },  -- turquoise (logo #0AFFBE)
     curseUrl    = "https://www.curseforge.com/wow/addons/weeklycompass",
+  },
+  {
+    key         = "MiniHub",
+    addonName   = "MiniHub",
+    label       = "MiniHub",
+    frameGlobal = "MiniHubContainer",
+    mmBtnGlobal = "LibDBIcon10_MiniHub",
+    toggleFn    = "MiniHub_Toggle",
+    optionsFn   = "MiniHub_OpenOptions",
+    slashList   = "MINIHUB",  -- secours : /mh si la fonction Toggle est absente
+    col         = { r=0.988, g=0.843, b=0.282 },  -- or vif (logo #FCD748)
+    curseUrl    = "https://www.curseforge.com/wow/addons/minihub",
+  },
+  {
+    key         = "XPBar",
+    addonName   = "XPBar",
+    label       = "XPBar",
+    frameGlobal = "XPBarContainer",
+    mmBtnGlobal = "LibDBIcon10_XPBar",
+    toggleFn    = "XPBar_Toggle",
+    optionsFn   = "XPBar_OpenOptions",
+    slashList   = "XPBAR",  -- secours : /xpbar
+    col         = { r=0.737, g=0.220, b=0.980 },  -- violet (logo #BC38FA)
+    curseUrl    = "https://www.curseforge.com/wow/addons/xpbar",
   },
 }
 
@@ -163,7 +200,8 @@ local placeholderFrame -- frame "addon absent"
 local optionsFrame     -- panneau d'options /ts config
 
 -- Fonctions déclarées ici, définies plus bas (dépendances croisées)
-local LayoutBar, SetAllModules, OpenOptions, RefreshOptions
+local LayoutBar, SetAllModules, OpenOptions, RefreshOptions, ToggleGlobalSearch
+local BuildPill, CollapseBar, ExpandBar, barSearchField, GlobalProvider
 
 -- ================================================================
 -- MISE À JOUR DU HIGHLIGHT DES ONGLETS
@@ -356,6 +394,26 @@ local function OnTabClick(mod)
 end
 
 -- ================================================================
+-- CLIC DROIT SUR UNE VIGNETTE : ouvre les options du module
+-- Chaque module expose une fonction globale <Addon>_OpenOptions().
+-- ================================================================
+local function OpenModuleOptions(mod)
+  -- Module absent -> on montre le placeholder CurseForge (comme le clic gauche)
+  if not C_AddOns.IsAddOnLoaded(mod.addonName) then
+    ShowPlaceholder(mod)
+    UpdateTabHighlights()
+    return
+  end
+  local fn = mod.optionsFn and _G[mod.optionsFn]
+  if type(fn) == "function" then
+    fn()
+  else
+    print("|cFF9480FFTibiSuite|r : |cFFFFD700" .. mod.addonName
+      .. "|r n'expose pas encore de menu d'options.")
+  end
+end
+
+-- ================================================================
 -- CONSTRUCTION DE LA BARRE D'ONGLETS
 -- ================================================================
 -- Sauvegarde la position courante de la barre (par personnage)
@@ -428,6 +486,7 @@ local function BuildBar()
     GameTooltip:SetOwner(logoBtn, "ANCHOR_NONE")
     GameTooltip:SetPoint("TOPLEFT", logoBtn, "BOTTOMLEFT", 0, -6)
     GameTooltip:AddLine("|cFFC41F3BTibiSuite|r v" .. VERSION)
+    GameTooltip:AddLine("|cFFFFD700Clic gauche|r : ouvrir / fermer", 0.80, 0.80, 0.85)
     GameTooltip:AddLine("|cFFFFD700Maj + clic gauche|r : masquer la barre", 0.80, 0.80, 0.85)
     GameTooltip:AddLine("|cFFFFD700Clic droit|r : options", 0.80, 0.80, 0.85)
     if not TibiSuiteDB.locked then
@@ -444,10 +503,16 @@ local function BuildBar()
   logoBtn:SetScript("OnClick", function(_, button)
     if button == "RightButton" then
       OpenOptions()
-    elseif button == "LeftButton" and IsShiftKeyDown() then
-      -- Maj + clic gauche : masquer la barre (évite les fermetures accidentelles)
-      barFrame:Hide()
-      TibiSuiteCharDB.barOpen = false
+    elseif button == "LeftButton" then
+      if IsShiftKeyDown() then
+        -- Maj + clic gauche : masquer totalement (icône minimap pour rouvrir)
+        barFrame:Hide()
+        if barFrame and barFrame._searchField then barFrame._searchField.drop:Hide() end
+        TibiSuiteCharDB.barOpen = false
+      else
+        -- Clic gauche simple : replier la barre en pastille (rouvrir via la pastille)
+        if CollapseBar then CollapseBar() end
+      end
     end
     -- Clic gauche simple : rien (le logo sert de poignée de déplacement)
   end)
@@ -499,6 +564,18 @@ local function BuildBar()
   end)
   closeAll:SetScript("OnClick", function() SetAllModules(false) end)
 
+  -- Recherche globale : champ INTÉGRÉ à la barre (toujours visible, pas de loupe
+  -- à cliquer). On tape, les résultats apparaissent dans le popup déroulant.
+  do
+    local UIlib = _G.TibiMidnight
+    if UIlib and UIlib.MakeSearchField then
+      barFrame._searchField = UIlib.MakeSearchField(barFrame, {
+        accent = { 0.769, 0.118, 0.137 }, provider = GlobalProvider,
+        width = 120, placeholder = "Rechercher..." })
+      barFrame._search = barFrame._searchField.box  -- placé par LayoutBar
+    end
+  end
+
   -- ── Bouton fermer (×) ─────────────────────────────────────────
   local closeBtn = CreateFrame("Button", nil, barFrame, "BackdropTemplate")
   closeBtn:SetSize(CLOSE_W, CLOSE_W)
@@ -515,8 +592,8 @@ local function BuildBar()
     s:SetBackdropBorderColor(1.0, 0.30, 0.30, 1.0)
     GameTooltip:SetOwner(s, "ANCHOR_NONE")
     GameTooltip:SetPoint("TOPLEFT", s, "BOTTOMLEFT", 0, -6)
-    GameTooltip:AddLine("Masquer la barre TibiSuite", 0.8, 0.8, 0.8)
-    GameTooltip:AddLine("(icône minimap pour rouvrir)", 0.5, 0.5, 0.5)
+    GameTooltip:AddLine("Tout fermer et replier la barre", 0.8, 0.8, 0.8)
+    GameTooltip:AddLine("(pastille rouge ou icône minimap pour rouvrir)", 0.5, 0.5, 0.5)
     GameTooltip:Show()
   end)
   closeBtn:SetScript("OnLeave", function(s)
@@ -524,8 +601,8 @@ local function BuildBar()
     GameTooltip:Hide()
   end)
   closeBtn:SetScript("OnClick", function()
-    barFrame:Hide()
-    TibiSuiteCharDB.barOpen = false
+    -- Ferme tous les modules et replie la barre en pastille rouge.
+    if CollapseBar then CollapseBar() end
   end)
 
   -- ── Onglets des modules (positionnés par LayoutBar) ───────────
@@ -549,6 +626,7 @@ local function BuildBar()
       if C_AddOns.IsAddOnLoaded(capturedMod.addonName) then
         GameTooltip:AddLine("|cFFFFD700" .. capturedMod.addonName .. "|r")
         GameTooltip:AddLine("Clic gauche : ouvrir / fermer", 0.80, 0.80, 0.90)
+        GameTooltip:AddLine("Clic droit : options du module", 0.80, 0.80, 0.90)
       else
         GameTooltip:AddLine("|cFFFF5555" .. capturedMod.addonName .. "|r")
         GameTooltip:AddLine("Non installé", 0.90, 0.40, 0.40)
@@ -560,8 +638,13 @@ local function BuildBar()
       UpdateTabHighlights()
       GameTooltip:Hide()
     end)
-    btn:SetScript("OnClick", function()
-      OnTabClick(capturedMod)
+    btn:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+    btn:SetScript("OnClick", function(_, button)
+      if button == "RightButton" then
+        OpenModuleOptions(capturedMod)
+      else
+        OnTabClick(capturedMod)
+      end
     end)
 
     tabButtons[i] = btn
@@ -612,7 +695,8 @@ function LayoutBar()
 
   if not TibiSuiteDB.vertical then
     -- ---------------- MODE HORIZONTAL ----------------
-    local clusterW = ALL_W + ALL_GAP + ALL_W + ALL_GAP + CLOSE_W
+    local FIELD_W  = 120  -- largeur du champ de recherche intégré
+    local clusterW = FIELD_W + ALL_GAP + ALL_W + ALL_GAP + ALL_W + ALL_GAP + CLOSE_W
     local tabsW = (m > 0) and (m * (TAB_W + TAB_GAP) - TAB_GAP) or 0
     local barH = TAB_H + 14
     local barW = MARGIN + LOGO_W + tabsW + ALL_GAP + clusterW + MARGIN
@@ -639,12 +723,16 @@ function LayoutBar()
     anchor(closeBtn, "RIGHT", barFrame, "RIGHT", -MARGIN + 2, 0)
     anchor(closeAll, "RIGHT", closeBtn, "LEFT", -ALL_GAP, 0)
     anchor(openAll,  "RIGHT", closeAll, "LEFT", -ALL_GAP, 0)
+    if barFrame._search then
+      barFrame._search:SetSize(FIELD_W, 20)
+      anchor(barFrame._search, "RIGHT", openAll, "LEFT", -ALL_GAP, 0)
+    end
   else
     -- ---------------- MODE VERTICAL ------------------
     local logoH = 26
     local tabsH = (m > 0) and (m * (TAB_H + TAB_GAP) - TAB_GAP) or 0
     local barW  = MARGIN + VCOL_W + MARGIN
-    local barH  = MARGIN + logoH + 6 + tabsH + 8 + ALL_W + 6 + CLOSE_W + MARGIN
+    local barH  = MARGIN + logoH + 6 + tabsH + 8 + ALL_W + 6 + ALL_W + 6 + CLOSE_W + MARGIN
     barFrame:SetSize(barW, barH)
 
     logo:SetSize(VCOL_W, logoH)
@@ -674,8 +762,15 @@ function LayoutBar()
     anchor(openAll,  "TOPLEFT",  lastAnchor, "BOTTOMLEFT",  0, topOff)
     anchor(closeAll, "TOPRIGHT", lastAnchor, "BOTTOMRIGHT", 0, topOff)
 
-    closeBtn:SetSize(VCOL_W, CLOSE_W)
-    anchor(closeBtn, "TOPLEFT", openAll, "BOTTOMLEFT", 0, -6)
+    if barFrame._search then
+      barFrame._search:SetSize(VCOL_W, 20)
+      anchor(barFrame._search, "TOPLEFT", openAll, "BOTTOMLEFT", 0, -6)
+      closeBtn:SetSize(VCOL_W, CLOSE_W)
+      anchor(closeBtn, "TOPLEFT", barFrame._search, "BOTTOMLEFT", 0, -6)
+    else
+      closeBtn:SetSize(VCOL_W, CLOSE_W)
+      anchor(closeBtn, "TOPLEFT", openAll, "BOTTOMLEFT", 0, -6)
+    end
   end
 end
 
@@ -871,6 +966,236 @@ function OpenOptions()
 end
 
 -- ================================================================
+-- RECHERCHE GLOBALE  (loupe de la barre)
+-- Interroge tous les modules inscrits via TibiMidnight.RegisterSearch
+-- et affiche les résultats cliquables dans un panneau flottant Midnight.
+-- ================================================================
+local gSearchFrame
+local function BuildGlobalSearch()
+  if gSearchFrame then return gSearchFrame end
+  local UI = _G.TibiMidnight
+  if not UI then return nil end
+
+  local f = CreateFrame("Frame", "TibiSuiteGlobalSearch", UIParent, "BackdropTemplate")
+  f:SetSize(370, 430)
+  f:SetPoint("CENTER", UIParent, "CENTER", 0, 40)
+  f:SetFrameStrata("DIALOG")
+  f:SetMovable(true); f:EnableMouse(true)
+  f:RegisterForDrag("LeftButton")
+  f:SetScript("OnDragStart", f.StartMoving)
+  f:SetScript("OnDragStop", f.StopMovingOrSizing)
+  f:SetClampedToScreen(true)
+  UI.SkinFrame(f, { 0.769, 0.118, 0.137 }, UI.C.PANEL)
+  UI.AddHeaderLogo(f, "Interface\\AddOns\\TibiSuite\\medias\\TibiSuite")
+
+  local title = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
+  title:SetPoint("TOP", 0, -14)
+  title:SetText("|cFFC41F3BTibiSuite|r  Recherche")
+
+  local close = CreateFrame("Button", nil, f, "UIPanelCloseButton")
+  close:SetPoint("TOPRIGHT", 2, 2)
+  close:SetScript("OnClick", function() f:Hide() end)
+
+  local box = CreateFrame("EditBox", nil, f, "BackdropTemplate")
+  box:SetSize(330, 26)
+  box:SetPoint("TOP", 0, -44)
+  box:SetBackdrop(UI.FlatBackdrop())
+  box:SetBackdropColor(0.02, 0.01, 0.04, 0.95)
+  box:SetBackdropBorderColor(UI.C.BORDER[1], UI.C.BORDER[2], UI.C.BORDER[3], 0.9)
+  box:SetAutoFocus(true)
+  box:SetFontObject("GameFontHighlight")
+  box:SetTextInsets(8, 8, 0, 0)
+  box:SetScript("OnEscapePressed", function(s) s:ClearFocus(); f:Hide() end)
+
+  local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
+  scroll:SetPoint("TOPLEFT", 12, -80)
+  scroll:SetPoint("BOTTOMRIGHT", -30, 12)
+  local content = CreateFrame("Frame", nil, scroll)
+  content:SetSize(310, 10)
+  scroll:SetScrollChild(content)
+
+  local rows = {}
+  local empty = content:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
+  empty:SetPoint("TOPLEFT", 4, -6)
+  empty:SetText("Tapez pour chercher dans les modules chargés.")
+
+  local function render(query)
+    for _, r in ipairs(rows) do r:Hide() end
+    local results = UI.RunGlobalSearch(query or "")
+    empty:SetShown(#results == 0)
+    if #results == 0 then
+      empty:SetText((query == nil or query == "")
+        and "Tapez pour chercher dans les modules chargés." or "Aucun résultat.")
+    end
+    local y = -6
+    for i, item in ipairs(results) do
+      local r = rows[i]
+      if not r then
+        r = UI.MakeButton(content, 300, 24, "")
+        r._label:ClearAllPoints()
+        r._label:SetPoint("LEFT", 8, 0); r._label:SetPoint("RIGHT", -8, 0)
+        r._label:SetJustifyH("LEFT")
+        rows[i] = r
+      end
+      r:ClearAllPoints()
+      r:SetPoint("TOPLEFT", content, "TOPLEFT", 4, y)
+      r._label:SetText(UI.Hex(0.58, 0.50, 1.0) .. "[" .. (item._module or "?") .. "]|r "
+        .. (item.text or ""))
+      r:SetScript("OnClick", function()
+        if item.onClick then pcall(item.onClick) end
+      end)
+      r:Show()
+      y = y - 28
+    end
+    content:SetHeight(math.max(-y + 10, 10))
+  end
+
+  box:SetScript("OnTextChanged", function(s) render(s:GetText()) end)
+  f:SetScript("OnShow", function() box:SetFocus(); render(box:GetText() or "") end)
+
+  gSearchFrame = f
+  return f
+end
+
+-- Assignée à l'upvalue déclaré plus haut (pas de mot-clé local ici).
+-- Fournisseur global : agrège tous les modules et préfixe par nom de module.
+GlobalProvider = function(q)
+  local UI = _G.TibiMidnight
+  if not UI then return {} end
+  local res = UI.RunGlobalSearch(q)
+  for _, item in ipairs(res) do
+    item.text = UI.Hex(0.58, 0.50, 1.0) .. "[" .. (item._module or "?") .. "]|r " .. (item.text or "")
+  end
+  return res
+end
+
+-- La loupe de la barre ouvre un champ INLINE ; on tape, les résultats
+-- s'affichent en direct dans un popup déroulant juste en dessous.
+ToggleGlobalSearch = function()
+  local UI = _G.TibiMidnight
+  if not UI then
+    print("|cFF9480FFTibiSuite|r : bibliothèque d'interface absente (TibiMidnightUI).")
+    return
+  end
+  if not UI.MakeSearchField then
+    print("|cFF9480FFTibiSuite|r : bibliothèque obsolète, faites |cFFFFD700/reload|r.")
+    return
+  end
+  if not barSearchField then
+    barSearchField = UI.MakeSearchField(UIParent, {
+      accent = { 0.769, 0.118, 0.137 }, provider = GlobalProvider,
+      width = 240, placeholder = "Recherche globale..." })
+    barSearchField.box:SetFrameStrata("DIALOG")
+    barSearchField.box:Hide()
+  end
+  if barFrame then
+    barSearchField.box:ClearAllPoints()
+    local cx = barFrame:GetCenter()
+    local scx = (UIParent:GetWidth() or 1024) / 2
+    if cx and cx < scx then
+      -- barre à gauche de l'écran -> champ à droite de la barre
+      barSearchField.box:SetPoint("LEFT", barFrame, "RIGHT", 10, 0)
+    else
+      -- barre à droite de l'écran -> champ à gauche de la barre
+      barSearchField.box:SetPoint("RIGHT", barFrame, "LEFT", -10, 0)
+    end
+  end
+  barSearchField.Toggle()
+  if barFrame and barFrame._search then
+    local open = barSearchField.box:IsShown()
+    barFrame._search:SetBackdropBorderColor(
+      open and 0.85 or 0.45, open and 0.72 or 0.45, open and 0.30 or 0.55, open and 1.0 or 0.7)
+  end
+end
+
+-- ================================================================
+-- REPLI DE LA BARRE EN PASTILLE ROUGE
+-- Clic sur la croix rouge : ferme tous les modules et replie la barre
+-- en une petite pastille "logo + TibiSuite" rouge. Clic sur la pastille
+-- (ou l'icône minimap) : tout réafficher.
+-- ================================================================
+BuildPill = function()
+  if barFrame and barFrame._pill then return barFrame._pill end
+  if not barFrame then return nil end
+
+  local pill = CreateFrame("Button", "TibiSuitePill", UIParent, "BackdropTemplate")
+  pill:SetSize(122, 30)
+  pill:SetFrameStrata("MEDIUM")
+  pill:SetMovable(true)
+  pill:EnableMouse(true)
+  pill:RegisterForDrag("LeftButton")
+  pill:SetClampedToScreen(true)
+  pill:SetBackdrop(MakeBackdrop(4))
+  pill:SetBackdropColor(COL_BG.r, COL_BG.g, COL_BG.b, COL_BG.a)
+  pill:SetBackdropBorderColor(0.77, 0.12, 0.14, 1.0)  -- bordure rouge
+
+  local icon = pill:CreateTexture(nil, "ARTWORK")
+  icon:SetSize(20, 20)
+  icon:SetPoint("LEFT", pill, "LEFT", 6, 0)
+  icon:SetTexture("Interface\\AddOns\\TibiSuite\\medias\\TibiSuite")
+  local mask = pill:CreateMaskTexture()
+  mask:SetAllPoints(icon)
+  mask:SetTexture("Interface\\CharacterFrame\\TempPortraitAlphaMask",
+    "CLAMPTOBLACKADDITIVE", "CLAMPTOBLACKADDITIVE")
+  icon:AddMaskTexture(mask)
+
+  local txt = pill:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  txt:SetPoint("LEFT", icon, "RIGHT", 6, 0)
+  txt:SetText("|cFFC41F3BTibiSuite|r")
+
+  pill:SetScript("OnDragStart", pill.StartMoving)
+  pill:SetScript("OnDragStop", function(s)
+    s:StopMovingOrSizing()
+    -- La pastille et la barre partagent la même position mémorisée.
+    local point, _, _, x, y = s:GetPoint()
+    TibiSuiteCharDB.barPos = { point = point, x = x, y = y }
+  end)
+  pill:SetScript("OnClick", function() ExpandBar() end)
+  pill:SetScript("OnEnter", function(s)
+    GameTooltip:SetOwner(s, "ANCHOR_BOTTOM")
+    GameTooltip:AddLine("|cFFC41F3BTibiSuite|r")
+    GameTooltip:AddLine("Clic : réafficher la barre et les modules", 0.8, 0.8, 0.9)
+    GameTooltip:Show()
+  end)
+  pill:SetScript("OnLeave", function() GameTooltip:Hide() end)
+
+  -- Position : au point sauvegardé de la barre
+  local pos = TibiSuiteCharDB.barPos or { point = "CENTER", x = 0, y = -300 }
+  pill:ClearAllPoints()
+  pill:SetPoint(pos.point or "CENTER", UIParent, pos.point or "CENTER", pos.x or 0, pos.y or -300)
+  pill:Hide()
+
+  barFrame._pill = pill
+  return pill
+end
+
+CollapseBar = function()
+  -- Ferme aussi le popup de recherche intégré à la barre
+  if barFrame and barFrame._searchField then barFrame._searchField.drop:Hide() end
+  SetAllModules(false)           -- ferme tous les modules ouverts
+  SaveBarPos()                   -- mémorise la position actuelle de la barre
+  BuildPill()
+  -- Place la pastille à la position mémorisée de la barre
+  local pos = TibiSuiteCharDB.barPos or { point = "CENTER", x = 0, y = -300 }
+  barFrame._pill:ClearAllPoints()
+  barFrame._pill:SetPoint(pos.point or "CENTER", UIParent, pos.point or "CENTER", pos.x or 0, pos.y or -300)
+  if barFrame then barFrame:Hide() end
+  barFrame._pill:Show()
+  TibiSuiteCharDB.barOpen = false
+  TibiSuiteCharDB.barCollapsed = true
+end
+
+ExpandBar = function()
+  BuildBar()
+  if barFrame._pill then barFrame._pill:Hide() end
+  RestoreBarPos()                -- la barre reprend la dernière position (suit la pastille)
+  barFrame:Show()
+  TibiSuiteCharDB.barOpen = true
+  TibiSuiteCharDB.barCollapsed = false
+  UpdateTabHighlights()
+end
+
+-- ================================================================
 -- BOUTON MINIMAP
 -- ================================================================
 local function GetMinimapRadius()
@@ -955,12 +1280,12 @@ local function BuildMinimapButton()
     else
       if barFrame and barFrame:IsShown() then
         barFrame:Hide()
+        if barFrame._pill then barFrame._pill:Hide() end
+        if barFrame and barFrame._searchField then barFrame._searchField.drop:Hide() end
         TibiSuiteCharDB.barOpen = false
+        TibiSuiteCharDB.barCollapsed = false
       else
-        BuildBar()
-        barFrame:Show()
-        TibiSuiteCharDB.barOpen = true
-        UpdateTabHighlights()
+        ExpandBar()
       end
     end
   end)
@@ -995,6 +1320,8 @@ local INDIVIDUAL_MM_BTNS = {
   "RNTMinimapBtn",           -- RenTracker
   "LvlHistoryMinimapButton", -- LvlHistory
   "WeeklyCompassMinimapButton", -- WeeklyCompass
+  "LibDBIcon10_MiniHub",     -- MiniHub (bouton maître LibDBIcon)
+  "LibDBIcon10_XPBar",       -- XPBar (si présent)
 }
 
 local function HideIndividualMinimapButtons()
@@ -1020,12 +1347,12 @@ end
 local function ToggleBar()
   if barFrame and barFrame:IsShown() then
     barFrame:Hide()
+    if barFrame._pill then barFrame._pill:Hide() end
+    if barFrame and barFrame._searchField then barFrame._searchField.drop:Hide() end
     TibiSuiteCharDB.barOpen = false
+    TibiSuiteCharDB.barCollapsed = false
   else
-    BuildBar()
-    barFrame:Show()
-    TibiSuiteCharDB.barOpen = true
-    UpdateTabHighlights()
+    ExpandBar()
   end
 end
 
@@ -1083,6 +1410,33 @@ SlashCmdList["TIBISUITE"] = function(msg)
     RefreshOptions()
     print("|cFF9480FFTibiSuite|r barre " ..
       (TibiSuiteDB.locked and "|cFF66FF66verrouillée|r" or "|cFFFF7777déverrouillée|r") .. ".")
+
+  elseif msg == "diag" then
+    -- Diagnostic : liste les modules inscrits au registre de recherche globale
+    local UI = _G.TibiMidnight
+    if not UI or not UI.searchProviders then
+      print("|cFF9480FFTibiSuite|r diag : bibliothèque de recherche absente.")
+    else
+      local names, n = {}, 0
+      for k, prov in pairs(UI.searchProviders) do n = n + 1; names[#names + 1] = (prov.label or k) end
+      table.sort(names)
+      print("|cFF9480FFTibiSuite|r modules de recherche inscrits (" .. n .. ") : "
+        .. (n > 0 and table.concat(names, ", ") or "|cFFFF7777aucun|r"))
+    end
+
+  elseif msg:match("^search%s+") then
+    -- Diagnostic : nombre de résultats par module pour un mot donné
+    local word = msg:match("^search%s+(.+)")
+    local UI = _G.TibiMidnight
+    if UI and UI.searchProviders and word then
+      print("|cFF9480FFTibiSuite|r « " .. word .. " » par module :")
+      for k, prov in pairs(UI.searchProviders) do
+        local ok, res = pcall(prov.fn, UI.Normalize(word))
+        local c = (ok and type(res) == "table") and #res or -1
+        print("  " .. (prov.label or k) .. " : "
+          .. (c >= 0 and (c .. " resultat(s)") or "|cFFFF7777ERREUR|r"))
+      end
+    end
 
   elseif msg == "vertical" then
     TibiSuiteDB.vertical = not TibiSuiteDB.vertical
@@ -1187,7 +1541,11 @@ evFrame:SetScript("OnEvent", function(_, event, arg1)
 
     -- Restaurer l'état de la barre propre à ce personnage
     if barFrame then
-      if TibiSuiteCharDB.barOpen then
+      if TibiSuiteCharDB.barCollapsed then
+        BuildPill()
+        barFrame:Hide()
+        if barFrame._pill then barFrame._pill:Show() end
+      elseif TibiSuiteCharDB.barOpen then
         barFrame:Show()
         UpdateTabHighlights()
       else
