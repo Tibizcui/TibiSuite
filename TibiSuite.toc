@@ -17,7 +17,7 @@
 ## Category: Tracking
 ## Category-frFR: Tracking
 
-## OptionalDeps: DailyTracker, DgnTracker, LegTracker, RenTracker, LvlHistory, WeeklyCompass, MiniHub, XPBar
+## OptionalDeps: DailyTracker, DgnTracker, LegTracker, RenTracker, LvlHistory, WeeklyCompass, MiniHub, XPBar, LairLens, SkillTracker
 
 ## X-Website: https://www.curseforge.com/wow/addons/tibisuite
 ## X-Discord: https://discord.gg/tibiscui

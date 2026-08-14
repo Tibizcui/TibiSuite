@@ -175,6 +175,29 @@ local MODULES = {
     col         = { r=0.737, g=0.220, b=0.980 },  -- violet (logo #BC38FA)
     curseUrl    = "https://www.curseforge.com/wow/addons/xpbar",
   },
+  {
+    key         = "Lair",
+    addonName   = "LairLens",
+    label       = "Repaire",
+    frameGlobal = "LairLensAuditFrame",
+    mmBtnGlobal = "LairLensMinimapBtn",  -- LairLens n'a pas de bouton minimap (champ informatif, non requis)
+    toggleFn    = "LairLens_Toggle",
+    optionsFn   = "LairLens_OpenOptions",
+    col         = { r=1.000, g=1.000, b=1.000 },  -- blanc pretre #FFFFFF (identite LairLens)
+    curseUrl    = "https://www.curseforge.com/wow/addons/lairlens",
+  },
+  {
+    key         = "Skill",
+    addonName   = "SkillTracker",
+    label       = "Metiers",
+    frameGlobal = "SkillTrackerMainFrame",
+    mmBtnGlobal = "SkillTrackerMinimapBtn",
+    toggleFn    = "SkillTracker_Toggle",
+    optionsFn   = "SkillTracker_OpenOptions",
+    slashList   = "SKILLTRACKER",  -- secours : /skt si la fonction Toggle est absente
+    col         = { r=0.000, g=1.000, b=0.596 },  -- emeraude Monk #00FF98 (identite SkillTracker)
+    curseUrl    = "https://www.curseforge.com/wow/addons/skilltracker",
+  },
 }
 
 -- ================================================================
@@ -664,6 +687,36 @@ local function IsModuleVisible(mod)
   return not (TibiSuiteDB.hidden and TibiSuiteDB.hidden[mod.key])
 end
 
+-- Nombre d'onglets actuellement affichés (filtre utilisateur appliqué).
+local function VisibleCount()
+  local n = 0
+  for _, mod in ipairs(MODULES) do
+    if IsModuleVisible(mod) then n = n + 1 end
+  end
+  return n
+end
+
+-- Renvoie (colonnes, lignes) de la grille de toggles.
+-- Réglages INDÉPENDANTS : l'utilisateur choisit librement les deux valeurs
+-- (TibiSuiteDB.cols et TibiSuiteDB.rows). Aucun recalcul automatique de l'une
+-- par l'autre. Tant qu'une valeur n'a pas été fixée, on retombe sur un défaut
+-- qui reproduit l'ancien comportement : une seule ligne en horizontal, une
+-- seule colonne en vertical.
+local function ComputeGrid(m)
+  if not m or m < 1 then return 1, 1 end
+  local c = TibiSuiteDB.cols
+  if type(c) ~= "number" or c < 1 then
+    c = TibiSuiteDB.vertical and 1 or m
+  end
+  local r = TibiSuiteDB.rows
+  if type(r) ~= "number" or r < 1 then
+    r = math.ceil(m / c)
+  end
+  if c < 1 then c = 1 end
+  if r < 1 then r = 1 end
+  return c, r
+end
+
 function LayoutBar()
   if not barFrame then return end
   TibiSuiteDB.hidden = TibiSuiteDB.hidden or {}
@@ -693,13 +746,21 @@ function LayoutBar()
   end
   local m = #vis
 
+  -- Grille de toggles : colonnes et lignes choisies indépendamment par l'utilisateur.
+  -- Sécurité d'affichage : on ne descend jamais sous le nombre de lignes strictement
+  -- nécessaire pour montrer tous les onglets (sinon certains seraient coupés). Une
+  -- valeur de lignes plus grande que nécessaire est respectée (lignes vides en bas).
+  local cols, rows = ComputeGrid(m)
+  local drawRows = (m > 0) and math.max(rows, math.ceil(m / cols)) or rows
+
   if not TibiSuiteDB.vertical then
     -- ---------------- MODE HORIZONTAL ----------------
     local FIELD_W  = 120  -- largeur du champ de recherche intégré
     local clusterW = FIELD_W + ALL_GAP + ALL_W + ALL_GAP + ALL_W + ALL_GAP + CLOSE_W
-    local tabsW = (m > 0) and (m * (TAB_W + TAB_GAP) - TAB_GAP) or 0
-    local barH = TAB_H + 14
-    local barW = MARGIN + LOGO_W + tabsW + ALL_GAP + clusterW + MARGIN
+    local gridW = (m > 0) and (cols * (TAB_W + TAB_GAP) - TAB_GAP) or 0
+    local gridH = (m > 0) and (drawRows * (TAB_H + TAB_GAP) - TAB_GAP) or TAB_H
+    local barH = gridH + 14
+    local barW = MARGIN + LOGO_W + gridW + ALL_GAP + clusterW + MARGIN
     barFrame:SetSize(barW, barH)
 
     logo:SetSize(LOGO_W - 10, barH - 6)
@@ -708,11 +769,17 @@ function LayoutBar()
     sep:SetSize(1, barH - 12)
     anchor(sep, "LEFT", barFrame, "LEFT", MARGIN + LOGO_W - 8, 0)
 
+    -- Onglets disposés en grille (remplissage ligne par ligne), verticalement centrés
     local tabStartX = MARGIN + LOGO_W
-    for j, btn in ipairs(vis) do
+    local topPad    = (barH - gridH) / 2
+    for idx, btn in ipairs(vis) do
+      local gi  = idx - 1
+      local row = math.floor(gi / cols)
+      local col = gi % cols
       btn:SetSize(TAB_W, TAB_H)
-      anchor(btn, "LEFT", barFrame, "LEFT",
-        tabStartX + (j - 1) * (TAB_W + TAB_GAP), 0)
+      anchor(btn, "TOPLEFT", barFrame, "TOPLEFT",
+        tabStartX + col * (TAB_W + TAB_GAP),
+        -(topPad + row * (TAB_H + TAB_GAP)))
     end
 
     -- Tailles fixes (au cas où l'on revient du mode vertical)
@@ -730,47 +797,51 @@ function LayoutBar()
   else
     -- ---------------- MODE VERTICAL ------------------
     local logoH = 26
-    local tabsH = (m > 0) and (m * (TAB_H + TAB_GAP) - TAB_GAP) or 0
-    local barW  = MARGIN + VCOL_W + MARGIN
-    local barH  = MARGIN + logoH + 6 + tabsH + 8 + ALL_W + 6 + ALL_W + 6 + CLOSE_W + MARGIN
+    -- Une colonne large (aspect d'origine) ; plusieurs colonnes -> largeur d'onglet standard
+    local cw       = (cols == 1) and VCOL_W or TAB_W
+    local gridW    = (m > 0) and (cols * (cw + TAB_GAP) - TAB_GAP) or VCOL_W
+    local contentW = math.max(gridW, VCOL_W)
+    local gridH    = (m > 0) and (drawRows * (TAB_H + TAB_GAP) - TAB_GAP) or 0
+
+    local hasSearch  = barFrame._search and true or false
+    local gridTop    = MARGIN + logoH + 3 + 1 + 6      -- haut de la grille (depuis le haut du cadre)
+    local clusterTop = gridTop + gridH + 8             -- haut du cluster (ouvrir/fermer)
+    local searchTop  = clusterTop + ALL_W + 6
+    local closeTop   = hasSearch and (searchTop + 20 + 6) or (clusterTop + ALL_W + 6)
+    local barW  = MARGIN + contentW + MARGIN
+    local barH  = closeTop + CLOSE_W + MARGIN
     barFrame:SetSize(barW, barH)
 
-    logo:SetSize(VCOL_W, logoH)
+    logo:SetSize(contentW, logoH)
     anchor(logo, "TOP", barFrame, "TOP", 0, -MARGIN)
 
-    sep:SetSize(VCOL_W, 1)
+    sep:SetSize(contentW, 1)
     anchor(sep, "TOP", logo, "BOTTOM", 0, -3)
 
-    local prev = sep
-    for j, btn in ipairs(vis) do
-      btn:SetSize(VCOL_W, TAB_H)
-      if j == 1 then
-        anchor(btn, "TOP", sep, "BOTTOM", 0, -6)
-      else
-        anchor(btn, "TOP", prev, "BOTTOM", 0, -TAB_GAP)
-      end
-      prev = btn
+    -- Grille d'onglets, centrée horizontalement dans le contenu
+    local gridLeft = MARGIN + (contentW - gridW) / 2
+    for idx, btn in ipairs(vis) do
+      local gi  = idx - 1
+      local row = math.floor(gi / cols)
+      local col = gi % cols
+      btn:SetSize(cw, TAB_H)
+      anchor(btn, "TOPLEFT", barFrame, "TOPLEFT",
+        gridLeft + col * (cw + TAB_GAP),
+        -(gridTop + row * (TAB_H + TAB_GAP)))
     end
 
-    -- Point d'ancrage du cluster : dernier onglet visible, sinon séparateur
-    local lastAnchor = (m > 0) and vis[m] or sep
-    local topOff     = (m > 0) and -8 or -6
-
-    local halfW = (VCOL_W - ALL_GAP) / 2
+    local halfW = (contentW - ALL_GAP) / 2
     openAll:SetSize(halfW, ALL_W)
     closeAll:SetSize(halfW, ALL_W)
-    anchor(openAll,  "TOPLEFT",  lastAnchor, "BOTTOMLEFT",  0, topOff)
-    anchor(closeAll, "TOPRIGHT", lastAnchor, "BOTTOMRIGHT", 0, topOff)
+    anchor(openAll,  "TOPLEFT",  barFrame, "TOPLEFT",  MARGIN,  -clusterTop)
+    anchor(closeAll, "TOPRIGHT", barFrame, "TOPRIGHT", -MARGIN, -clusterTop)
 
-    if barFrame._search then
-      barFrame._search:SetSize(VCOL_W, 20)
-      anchor(barFrame._search, "TOPLEFT", openAll, "BOTTOMLEFT", 0, -6)
-      closeBtn:SetSize(VCOL_W, CLOSE_W)
-      anchor(closeBtn, "TOPLEFT", barFrame._search, "BOTTOMLEFT", 0, -6)
-    else
-      closeBtn:SetSize(VCOL_W, CLOSE_W)
-      anchor(closeBtn, "TOPLEFT", openAll, "BOTTOMLEFT", 0, -6)
+    if hasSearch then
+      barFrame._search:SetSize(contentW, 20)
+      anchor(barFrame._search, "TOPLEFT", barFrame, "TOPLEFT", MARGIN, -searchTop)
     end
+    closeBtn:SetSize(contentW, CLOSE_W)
+    anchor(closeBtn, "TOPLEFT", barFrame, "TOPLEFT", MARGIN, -closeTop)
   end
 end
 
@@ -807,6 +878,13 @@ function RefreshOptions()
   f._vertBtn._label:SetText("Barre verticale : " ..
     (TibiSuiteDB.vertical and "|cFF66FF66Oui|r" or "|cFFFF7777Non|r"))
 
+  -- Grille de toggles : colonnes (pilotées) et lignes (déduites)
+  if f._colsVal then
+    local c, r = ComputeGrid(VisibleCount())
+    f._colsVal:SetText(tostring(c))
+    f._rowsVal:SetText(tostring(r))
+  end
+
   -- Bascules par module (statut d'installation + affiché/masqué)
   if f._moduleRows then
     TibiSuiteDB.hidden = TibiSuiteDB.hidden or {}
@@ -827,7 +905,7 @@ local function BuildOptions()
   if optionsFrame then return end
   local f = CreateFrame("Frame", "TibiSuiteOptions", UIParent, "BackdropTemplate")
   optionsFrame = f
-  f:SetSize(300, 470)
+  f:SetSize(300, 560)
   f:SetPoint("CENTER", UIParent, "CENTER", 0, 80)
   f:SetFrameStrata("DIALOG")
   f:SetMovable(true)
@@ -892,9 +970,58 @@ local function BuildOptions()
     RefreshOptions()
   end)
 
+  -- ── Disposition : grille de toggles (colonnes × lignes, liées) ──
+  local gridLbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+  gridLbl:SetPoint("TOPLEFT", vertBtn, "BOTTOMLEFT", 0, -14)
+  gridLbl:SetText("Disposition des toggles")
+
+  -- Colonnes : label + [-] valeur [+]
+  local colsLbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  colsLbl:SetPoint("TOPLEFT", gridLbl, "BOTTOMLEFT", 4, -8)
+  colsLbl:SetText("Colonnes")
+  local colMinus = MakeTextButton(f, 26, 22, "|cFFFFD700-|r")
+  colMinus:SetPoint("LEFT", colsLbl, "RIGHT", 24, 0)
+  local colsVal = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  colsVal:SetPoint("LEFT", colMinus, "RIGHT", 8, 0)
+  colsVal:SetWidth(30); colsVal:SetJustifyH("CENTER")
+  f._colsVal = colsVal
+  local colPlus = MakeTextButton(f, 26, 22, "|cFFFFD700+|r")
+  colPlus:SetPoint("LEFT", colsVal, "RIGHT", 8, 0)
+
+  -- Lignes : label + [-] valeur [+]
+  local rowsLbl = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
+  rowsLbl:SetPoint("TOPLEFT", colsLbl, "BOTTOMLEFT", 0, -10)
+  rowsLbl:SetText("Lignes")
+  local rowMinus = MakeTextButton(f, 26, 22, "|cFFFFD700-|r")
+  rowMinus:SetPoint("LEFT", rowsLbl, "RIGHT", 40, 0)
+  local rowsVal = f:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+  rowsVal:SetPoint("LEFT", rowMinus, "RIGHT", 8, 0)
+  rowsVal:SetWidth(30); rowsVal:SetJustifyH("CENTER")
+  f._rowsVal = rowsVal
+  local rowPlus = MakeTextButton(f, 26, 22, "|cFFFFD700+|r")
+  rowPlus:SetPoint("LEFT", rowsVal, "RIGHT", 8, 0)
+
+  -- Handlers INDÉPENDANTS : chaque réglage n'édite que sa propre valeur, sans
+  -- recalculer l'autre. Bornes : 1 à nombre total de modules.
+  local maxTabs = #MODULES
+  local function setCols(c)
+    if c < 1 then c = 1 elseif c > maxTabs then c = maxTabs end
+    TibiSuiteDB.cols = c
+    LayoutBar(); RefreshOptions()
+  end
+  local function setRows(r)
+    if r < 1 then r = 1 elseif r > maxTabs then r = maxTabs end
+    TibiSuiteDB.rows = r
+    LayoutBar(); RefreshOptions()
+  end
+  colMinus:SetScript("OnClick", function() local c = ComputeGrid(VisibleCount()); setCols(c - 1) end)
+  colPlus:SetScript("OnClick",  function() local c = ComputeGrid(VisibleCount()); setCols(c + 1) end)
+  rowMinus:SetScript("OnClick", function() local _, r = ComputeGrid(VisibleCount()); setRows(r - 1) end)
+  rowPlus:SetScript("OnClick",  function() local _, r = ComputeGrid(VisibleCount()); setRows(r + 1) end)
+
   -- ── Actions : Tout ouvrir / Tout fermer / Recentrer ──
   local openA = MakeTextButton(f, 80, 24, "|cFF66FF66Tout ouvrir|r")
-  openA:SetPoint("TOPLEFT", vertBtn, "BOTTOMLEFT", 0, -14)
+  openA:SetPoint("TOPLEFT", rowsLbl, "BOTTOMLEFT", -4, -14)
   openA:SetScript("OnClick", function() SetAllModules(true) end)
 
   local closeA = MakeTextButton(f, 80, 24, "|cFFFFAA55Tout fermer|r")
@@ -1322,6 +1449,7 @@ local INDIVIDUAL_MM_BTNS = {
   "WeeklyCompassMinimapButton", -- WeeklyCompass
   "LibDBIcon10_MiniHub",     -- MiniHub (bouton maître LibDBIcon)
   "LibDBIcon10_XPBar",       -- XPBar (si présent)
+  "SkillTrackerMinimapBtn",  -- SkillTracker
 }
 
 local function HideIndividualMinimapButtons()
